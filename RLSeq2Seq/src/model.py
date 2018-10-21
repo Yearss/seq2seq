@@ -201,6 +201,10 @@ class SummarizationModel(object):
             [], axis=0)
         prev_encoder_es = self.prev_encoder_es if (hps.use_temporal_attention and hps.mode == "decode") else tf.stack(
             [], axis=0)
+
+        if not hps.pointer_gen:
+            self._max_art_oovs = None
+            self._enc_batch_extend_vocab = None
         return attention_decoder(hps,
                                  self._vocab.size(),
                                  self._max_art_oovs,
@@ -516,6 +520,17 @@ class SummarizationModel(object):
             self._summaries = tf.summary.merge_all()
         t1 = time.time()
         tf.logging.info('Time to build graph: %i seconds', t1 - t0)
+
+    # def collect_params(self):
+    #
+    #     with tf.variable_scope("summary"):
+    #
+    #         for var in tf.trainable_variables():
+    #             tf.summary.histogram(var.name, var)
+    #
+    #         tf.summary.histogram(tf.stack(self.p_gens, axis=0))
+    #         tf.summary.histogram()
+
 
     def collect_dqn_transitions(self, sess, batch, step, max_art_oovs):
         """Get decoders' output and calculate reward at each decoding step, Q-function, value-function, and Advantage function.
