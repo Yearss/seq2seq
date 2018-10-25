@@ -345,6 +345,7 @@ class SummarizationModel(object):
                 loss_per_step.append(losses)
             self._pgen_loss = _mask_and_avg(loss_per_step, self._dec_padding_mask)
             self.variable_summaries('pgen_loss', self._pgen_loss)
+
             # Adding Q-Estimation to CE loss in Actor-Critic Model
             if self._hps.ac_training:
                 # Calculating Actor-Critic loss
@@ -490,7 +491,7 @@ class SummarizationModel(object):
                 loss_to_minimize = self._pointer_cov_total_loss
 
         tvars = tf.trainable_variables()
-        gradients = tf.gradients(loss_to_minimize, tvars, aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE)
+        gradients = tf.gradients(loss_to_minimize, tvars)
 
         # Clip the gradients
         with tf.device("/gpu:{}".format(self._hps.gpu_num)):
@@ -755,6 +756,7 @@ class SummarizationModel(object):
           loss
         """
         feed_dict = self._make_feed_dict(batch)
+
         if self._hps.ac_training or self._hps.rl_training:
             if self._hps.fixed_eta:
                 feed_dict[self._eta] = self._hps.eta
@@ -795,6 +797,13 @@ class SummarizationModel(object):
             to_return['rl_avg_logprobs'] = self._rl_avg_logprobs
 
         # We feed the collected reward and feed it back to model to update the loss
+
+        if step % 30 == 0:
+            content = data.outputids2words(feed_dict[self._enc_batch_extend_vocab][5], self._vocab, batch.art_oovs[5]) 
+            tf.logging.info(" ".join(content).encode("utf-8"))
+            title = data.outputids2words(feed_dict[self._dec_batch][5], self._vocab, batch.art_oovs[5])
+            tf.logging.info(" ".join(title).encode("utf-8"))
+
         return sess.run(to_return, feed_dict)
 
     def run_eval_step(self, sess, batch, step, q_estimates=None):

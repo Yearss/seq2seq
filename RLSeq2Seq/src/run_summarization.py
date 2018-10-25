@@ -36,6 +36,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import gen_array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops.distributions import bernoulli
+import logging
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 os.environ["CUDA_VISIBLE_DEVICES"] = "5"
